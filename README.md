@@ -33,7 +33,7 @@
 
 OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 
-- 基于 **Cloudflare Pages + KV**
+- 基于 **Cloudflare Pages + KV**（最终一致性，上传后存在短暂同步延迟）
 - 使用 **Telegram Bot** 作为实际文件存储（本地开发使用 R2）
 - 通过 **分片上传** 突破 20MB 单文件限制
 - 支持 **HTTP Range**，适合视频 / 大文件访问
