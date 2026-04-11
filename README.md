@@ -332,6 +332,7 @@ OtterHub/
 ## 📋 TODO
 
 - [x] 核心能力
+  - [x] 基于 Cookie 实现密码登录、登出功能
   - [x] 分片上传（≤20MB / 片），支持大文件（已实测 100MB，理论 1GB）
   - [x] HTTP Range 支持（视频 / 音频按需加载、断点续传）
   - [x] Private 私有文件访问控制
@@ -342,45 +343,38 @@ OtterHub/
   - [x] 批量操作（复制 / 删除 / 重命名）
   - [x] 收藏（Liked）和标签（Tag）
   - [x] 筛选功能（按标签 / 按收藏 / 按日期范围）和排序功能（文件大小 / 文件名称 / 上传时间）
+  - [x] 临时分享文件（无论是否 Private 都可以访问）
+    - [x] KV实现, 一次性 / 有效期 URL （允许用户选择）
+    - [x] key: `shared:<uuid>`
+    - [x] value: `<file_key>`
 
 - [x] 预览与展示
   - [x] 图片瀑布流（支持 GIF）
   - [x] 视频缩略图（Telegram thumbnail），仅 20MB 内的视频文件支持
-    - 如果要分片视频文件也支持，需要前端截图第一帧上传，`thumb:`
+  - [x] 文档预览支持
+    - [x] 纯文本文件（TXT / MD / JSON 等）
+    - [x] EPUB 电子书（PDF 直接走浏览器预览）
   - [x] 图片加载策略（默认 / 省流 / 无图）
 
 - [x] 安全与体验
-  - [x] NSFWJS 客户端检测（安全模式遮罩）
   - [x] 日夜模式
   - [x] 移动端基础适配
-
-### High Priority
-- [x] 基于 cookie 实现登录登出
-- [x] 右下角悬浮按钮（FAB），多操作统一入口（登出、管理页面）
-- [x] 随机壁纸（Wallhaven、Bing、Pixabay 等）
-- [x] 全面重构为 Hono 后端（鉴权更灵活，可移植性更好）
-- [x] 前端迁移至 Hono RPC (End-to-end Type Safety)
-- [x] 临时分享文件（无论是否 Private 都可以访问）
-  - [x] KV实现, 一次性 / 有效期 URL （允许用户选择）
-  - [x] key: `shared:<uuid>`
-  - [x] value: `<file_key>`
-- [x] 文件类型定制
-  - [x] 文档：预览支持
-    - [x] 电子书（PDF、EPUB 等） `<iframe> / <embed> / pdf.js / epub.js`
-    - [x] 漫画（图片 → 连续阅读 / PDF）
-    - [x] 小说模式？多个txt或者md文件合并为一本小说
+  - [x] NSFWJS 客户端检测（安全模式遮罩）
+  - [x] 右下角悬浮按钮（FAB），多操作统一入口（登出、管理页面、回收站）
 
 ---
 
 ### Low Priority
 
+- [x] 随机壁纸获取（Wallhaven、Bing、Pixabay 等）
 - [x] API Token 支持 (通过 `API_TOKEN` 环境变量配置)
-- 其他
-  - [ ] KV vs D1 数据库评估
-    - D1：单库 500MB，分库可达 5GB
-    - 优点：SQL、关系模型、文件夹结构更自然
-    - 当前结论：KV 足够，暂不迁移
-  - [ ] ~~文件夹系统（通过文件名前缀 + 搜索 + Tag 达成等效能力）~~
+- [ ] 申请 TG API ID，自建 Telegram Bot API Server, 单个文件下载上限可提升至 2GB
+
+- [ ] KV vs D1 数据库评估
+  - D1：单库 500MB，分库可达 5GB
+  - 优点：SQL、关系模型、文件夹结构更自然
+  - 当前结论：KV 足够，暂不迁移
+- [ ] ~~文件夹系统~~ （已通过「文件名前缀 + 搜索 + Tag」实现等效能力）
 
 ---
 

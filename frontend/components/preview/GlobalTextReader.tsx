@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePreviewStore } from "@/stores/preview-store";
 import { getFileUrl } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
-import { Copy, CopyCheck, Download, Minus, X, FileText, Maximize2 } from "lucide-react";
+import { Copy, CopyCheck, Download, Minus, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
