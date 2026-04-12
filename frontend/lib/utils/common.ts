@@ -1,39 +1,22 @@
 import clsx, { ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { ApiResponse } from "@shared/types";
+import { format } from "date-fns";
 import { getFileType } from "./file";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// 格式化音视频时间为分秒格式
-export const formatMediaTime = (time: number) => {
-  if (isNaN(time)) return "0:00";
-  const minutes = Math.floor(time / 60);
-  const seconds = Math.floor(time % 60);
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+/** 格式化时间戳为 "yyyy.MM.dd HH:mm" 格式 */
+export const formatTime = (timestamp: number): string => {
+  if (isNaN(timestamp) || timestamp < 0) return "N/A";
+  return format(new Date(timestamp), "yyyy.MM.dd HH:mm");
 };
 
-// 格式化时间戳为 "YYYY.MM.DD HH:mm" 格式
-export const formatTime = (timestamp: number) => {
-  // 校验时间戳有效性
+/** 格式化时间戳为 "yyyy.MM.dd" 格式（仅年月日） */
+export const formatDate = (timestamp: number): string => {
   if (isNaN(timestamp) || timestamp < 0) return "N/A";
-
-  const date = new Date(timestamp);
-  // 获取年份
-  const year = date.getFullYear();
-  // 获取月份（补0，确保两位数）
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  // 获取日期（补0）
-  const day = String(date.getDate()).padStart(2, "0");
-  // 获取小时（补0）
-  const hour = String(date.getHours()).padStart(2, "0");
-  // 获取分钟（补0）
-  const minute = String(date.getMinutes()).padStart(2, "0");
-
-  // 拼接成指定格式
-  return `${year}.${month}.${day} ${hour}:${minute}`;
+  return format(new Date(timestamp), "yyyy.MM.dd");
 };
 
 export function buildTmpFileKey(file: File): string {

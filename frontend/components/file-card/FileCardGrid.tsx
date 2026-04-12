@@ -1,11 +1,11 @@
-import { Check, AlertTriangle, Loader2, RotateCw } from "lucide-react";
+import { Check, Loader2, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileTagBadge } from "@/components/FileTagBadge";
 import { FileDetailDialog } from "@/components/file-card/FileDetailDialog";
 import { FileActions } from "./FileActions";
 import { FileContent, ICON_DISPLAY_SIZE } from "./FileContent";
 import { FileItem } from "@shared/types";
-import { cn, formatFileSize } from "@/lib/utils";
+import { cn, formatFileSize, formatDate } from "@/lib/utils";
 import { useFileCardActions } from "./hooks";
 import { NsfwSign } from "./NsfwSign";
 import { FileEditDialog } from "./FileEditDialog";
@@ -114,8 +114,10 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-xs  text-white/50">
-              {formatFileSize(file.metadata?.fileSize || 0)}
+            <p className="flex items-center gap-2 text-xs text-white/50 min-w-0">
+              <span className="shrink-0">{formatFileSize(file.metadata?.fileSize || 0)}</span>
+              <span>•</span>
+              <span className="shrink-0 truncate">{formatDate(file.metadata?.uploadedAt || 0)}</span>
             </p>
             {isIncompleteUpload && (
               <Button

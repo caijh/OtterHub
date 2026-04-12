@@ -76,12 +76,12 @@ export function SortTypeDropdown() {
         className="h-9 px-3 text-foreground/80 hover:text-foreground hover:bg-secondary/50 gap-2 rounded-none border-none focus-visible:ring-0"
       >
         {TypeIcon && <TypeIcon className="h-4 w-4" />}
-        <span className="text-sm font-medium">{currentType?.label}</span>
+        <span className="text-sm font-medium hidden sm:inline">{currentType?.label}</span>
         <OrderIcon className="h-4 w-4 text-foreground/60" />
       </Button>
 
       {/* 分隔线 */}
-      <div className="w-[1px] h-4 bg-glass-border" />
+      <div className="w-px h-4 bg-glass-border" />
 
       {/* 切换排序类型的下拉菜单 */}
       <DropdownMenu>

@@ -111,9 +111,9 @@ export function FilterDropdown() {
             )}
           >
             <Filter className="h-4 w-4" />
-            <span>筛选</span>
+            <span className="hidden sm:inline">筛选</span>
             {activeFiltersCount > 0 && (
-              <Badge variant="secondary" className="ml-1 h-5 px-1 min-w-[1.25rem] justify-center bg-primary/20 text-primary border-none">
+              <Badge variant="secondary" className="ml-1 h-5 px-1 min-w-5 justify-center bg-primary/20 text-primary border-none">
                 {activeFiltersCount}
               </Badge>
             )}

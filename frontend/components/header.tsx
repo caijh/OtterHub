@@ -78,7 +78,7 @@ export function Header() {
                         <div className="space-y-1"><p className="text-base font-semibold text-foreground">图片加载</p><p className="text-xs text-foreground/50">根据网络自动调整质量</p></div>
                         <ImageLoadModeToggle />
                       </div>
-                      <div className="flex items-center justify-between border-t border-glass-border pt-6">
+                      <div className="flex items-center justify-between">
                         <div className="space-y-1"><p className="text-base font-semibold text-foreground">深色模式</p><p className="text-xs text-foreground/50">随系统自动切换主题</p></div>
                         <ThemeToggle />
                       </div>
