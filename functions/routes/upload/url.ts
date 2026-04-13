@@ -6,6 +6,13 @@ import { DBAdapterFactory } from '@utils/db-adapter';
 import { proxyGet } from '@utils/proxy';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
+import {
+  MIME_TO_EXT,
+  extractMimeType,
+  extractFileNameFromDisposition,
+  extractFileNameFromUrl,
+  hasExtension,
+} from '@shared/utils/file';
 
 export const urlUploadRoutes = new Hono<{ Bindings: Env }>();
 
@@ -32,7 +39,23 @@ urlUploadRoutes.post(
         return fail(c, 'Empty response body from remote URL', 502);
       }
 
-      const finalFileName = (fileName || 'remote_file').substring(0, 100);
+      // 1. 提取 MIME 类型
+      const mimeType = extractMimeType(response.headers.get('content-type'));
+
+      // 2. 推导文件名（优先级：用户传入 > URL 路径 > Content-Disposition）
+      let resolvedName =
+        fileName ||
+        extractFileNameFromUrl(url) ||
+        extractFileNameFromDisposition(response.headers.get('content-disposition')) ||
+        'remote_file';
+
+      // 3. 若文件名无扩展名，根据 MIME 类型补全
+      if (!hasExtension(resolvedName) && mimeType) {
+        const ext = MIME_TO_EXT[mimeType] ?? '';
+        if (ext) resolvedName += ext;
+      }
+
+      const finalFileName = resolvedName.substring(0, MAX_FILENAME_LENGTH);
       const fileSize = parseInt(response.headers.get('content-length') || '0');
 
       const dbAdapter = DBAdapterFactory.getAdapter(c.env);
