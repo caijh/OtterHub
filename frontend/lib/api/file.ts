@@ -292,3 +292,14 @@ export async function editMetadata(
   );
   return { metadata: data };
 }
+
+/**
+ * AI分析图片生成描述
+ */
+export async function analyzeImage(key: string): Promise<{ desc: string }> {
+  return unwrap<{ desc: string }>(
+    client.file[":key"].analyze.$post({
+      param: { key },
+    })
+  );
+}

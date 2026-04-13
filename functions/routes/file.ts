@@ -4,6 +4,7 @@ import { rawRoutes } from './file/raw';
 import { thumbRoutes } from './file/thumb';
 import { metaRoutes } from './file/meta';
 import { actionRoutes } from './file/action';
+import { analyzeRoutes } from './file/analyze';
 import type { Env } from '../types/hono';
 
 export const fileRoutes = new Hono<{ Bindings: Env }>();
@@ -13,3 +14,4 @@ fileRoutes.route('/', rawRoutes);
 fileRoutes.route('/', thumbRoutes);
 fileRoutes.route('/', metaRoutes);
 fileRoutes.route('/', actionRoutes);
+fileRoutes.route('/', analyzeRoutes);

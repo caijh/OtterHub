@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { editMetadata } from "@/lib/api";
-import { FileItem, MAX_FILENAME_LENGTH, MAX_DESC_LENGTH } from "@shared/types";
+import { editMetadata, analyzeImage } from "@/lib/api";
+import { FileItem, MAX_FILENAME_LENGTH, MAX_DESC_LENGTH, FileType } from "@shared/types";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { TagSelector } from "@/components/TagSelector";
 import {
@@ -36,6 +36,7 @@ export function FileEditDialog({
   const [tags, setTags] = useState<string[]>([]);
   const [desc, setDesc] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // 计算完整文件名长度
   const fullFileNameLength = baseName.length + extension.length;
@@ -44,6 +45,9 @@ export function FileEditDialog({
   const isFileNameValid = baseName.trim().length > 0 && fullFileNameLength <= MAX_FILENAME_LENGTH;
   const isDescValid = desc.length <= MAX_DESC_LENGTH;
   const canSubmit = isFileNameValid && isDescValid;
+
+  // 判断是否为图片文件
+  const isImageFile = file?.name?.startsWith(`${FileType.Image}:`);
 
   // 初始化表单数据
   useEffect(() => {
@@ -64,6 +68,33 @@ export function FileEditDialog({
       setDesc(file.metadata?.desc || "");
     }
   }, [file]);
+
+  // AI分析图片生成描述
+  const handleAnalyzeImage = async () => {
+    if (!file || isAnalyzing) return;
+
+    setIsAnalyzing(true);
+    try {
+      const result = await analyzeImage(file.name);
+      const newDesc = result.desc || "";
+      
+      // 如果超过长度限制，截断
+      if (newDesc.length > MAX_DESC_LENGTH) {
+        setDesc(newDesc.slice(0, MAX_DESC_LENGTH));
+        toast.info("描述已生成，但超过长度限制已自动截断");
+      } else {
+        setDesc(newDesc);
+        toast.success("AI分析完成");
+      }
+    } catch (error) {
+      console.error("AI analysis error:", error);
+      toast.error("AI分析失败", {
+        description: error instanceof Error ? error.message : "未知错误",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,10 +166,7 @@ export function FileEditDialog({
             </div>
             <div className="flex justify-between items-center text-xs">
               <span className={!isFileNameValid && baseName ? "text-red-400" : "text-foreground/40"}>
-                {baseName.trim() ? (fullFileNameLength > MAX_FILENAME_LENGTH ? "文件名过长" : "") : (baseName ? "文件名不能为空" : "")}
-              </span>
-              <span className={`${fullFileNameLength > MAX_FILENAME_LENGTH ? "text-red-400" : "text-foreground/40"}`}>
-                {fullFileNameLength}/{MAX_FILENAME_LENGTH}
+                {baseName.trim() ? (fullFileNameLength > MAX_FILENAME_LENGTH ? `文件名过长：${fullFileNameLength} / ${MAX_FILENAME_LENGTH}` : "") : (baseName ? "文件名不能为空" : "")}
               </span>
             </div>
           </div>
@@ -156,14 +184,38 @@ export function FileEditDialog({
 
           {/* 描述 */}
           <div className="space-y-2">
-            <Label className="text-foreground/80">描述</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-foreground/80">描述</Label>
+              {isImageFile && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleAnalyzeImage}
+                  disabled={isAnalyzing || isSubmitting}
+                  className="h-7 px-2 text-xs text-primary hover:text-primary/80"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      分析中
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      AI分析
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
             <Textarea
               id="desc"
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               placeholder="添加文件描述..."
               className={`bg-secondary/30 border-glass-border text-foreground placeholder:text-foreground/60 focus-visible:ring-primary max-h-[120px] resize-none ${!isDescValid ? "border-red-500/50 focus-visible:ring-red-500" : ""}`}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isAnalyzing}
               rows={3}
             />
             <div className="flex justify-end text-xs">

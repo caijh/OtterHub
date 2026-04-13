@@ -23,9 +23,10 @@ type AIImageSource = {
 
 const SUPPORTED_IMAGE_PREFIXES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const AI_INPUT_MAX_BYTES = 2 * 1024 * 1024; // 仅用于内存文件的兜底限制
-const AI_MODEL = "@cf/llava-hf/llava-1.5-7b-hf";
 
-const AI_OUTPUT_PROMPT =
+export const AI_MODEL = "@cf/llava-hf/llava-1.5-7b-hf";
+
+export const AI_OUTPUT_PROMPT =
   "5-10 comma-separated image search tags. " +
   "Prioritize subject, action, object, scene. " +
   "Use short concrete phrases. " +
@@ -40,7 +41,7 @@ export function isSupportedImage(mimeType?: string | null, fileName?: string): b
   return false;
 }
 
-function extractImageDesc(result: unknown): string {
+export function extractImageDesc(result: unknown): string {
   if (typeof result === "string") return result;
   if (result && typeof result === "object" && !Array.isArray(result)) {
     const record = result as Record<string, unknown>;
@@ -50,7 +51,7 @@ function extractImageDesc(result: unknown): string {
   return "";
 }
 
-function normalizeDesc(desc: string): string {
+export function normalizeDesc(desc: string): string {
   const parsedTags = desc
     .toLowerCase()
     .replace(/[^a-z0-9\u4e00-\u9fa5,\s-]/g, "") // 仅保留字母数字、中文、逗号、空格、连字符
@@ -67,7 +68,7 @@ function normalizeDesc(desc: string): string {
 /**
  * 核心优化：利用 CF 边缘节点拉取并实时压缩图片，返回轻量级 ArrayBuffer
  */
-async function fetchResizedImageBuffer(botToken: string, fileId: string): Promise<ArrayBuffer | null> {
+export async function fetchResizedImageBuffer(botToken: string, fileId: string): Promise<ArrayBuffer | null> {
   const filePath = await getTgFilePath(fileId, botToken);
   if (!filePath) return null;
 
