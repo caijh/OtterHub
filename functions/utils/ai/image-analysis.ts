@@ -122,7 +122,6 @@ export async function analyzeImageAndEnrich(
   kv: KVWithMetadata,
   key: string,
   file: File | Blob,
-  metadata: FileMetadata,
   source: AIImageSource = {},
 ): Promise<void> {
   if (!env.AI) return;

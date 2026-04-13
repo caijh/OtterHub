@@ -134,8 +134,9 @@ export class TGAdapter extends BaseAdapter {
 
     // 图片上传成功后异步触发 AI 分析，优先使用 Telegram 返回的小图
     if (kv && fileType === FileType.Image && isSupportedImage(processedFile.type, processedFileName)) {
-      const enrichTask = analyzeImageAndEnrich(this.env, kv, key, processedFile, metadata, {
+      const enrichTask = analyzeImageAndEnrich(this.env, kv, key, processedFile, {
         previewFileId: imageVariantIds.previewFileId,
+        tgFileId: tgFileId,
       });
       if (waitUntil) {
         waitUntil(enrichTask);
@@ -143,8 +144,6 @@ export class TGAdapter extends BaseAdapter {
         enrichTask.catch((err) => console.warn("[AI] Background enrich failed:", err));
       }
     }
-
-
 
     return { key };
   }

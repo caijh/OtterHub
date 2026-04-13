@@ -194,6 +194,7 @@ export function getTgImageVariantIds(response: any): TgImageVariantIds {
     return extractPhotoVariantIds(response.result.photo as TgPhotoVariant[]);
   }
 
+  // 对于大于 5MB 的通过 sendDocument 上传的图片，似乎没有 thumb 返回
   const documentResult = response.result.document as TgDocumentResult | undefined;
   if (!documentResult?.file_id) {
     return { fileId: null, previewFileId: null };
