@@ -94,9 +94,10 @@ export interface BundleFileInfo {
   mimeType?: string;
 }
 
-// 单文件分享项
-export interface SingleShareItem {
-  token: string;
+// === 分享数据存储类型（用于 KV 存储和后端处理） ===
+
+// 单文件分享数据
+export interface SingleShareData {
   type: 'single';
   fileKey: string;
   fileName: string;
@@ -104,36 +105,55 @@ export interface SingleShareItem {
   oneTime?: boolean;
   createdAt: number;
   expiresAt?: number;
+  consumedAt?: number;
 }
 
-// 打包分享项
-export interface BundleShareItem {
-  token: string;
+// 打包分享数据
+export interface BundleShareData {
   type: 'bundle';
+  fileKeys: string[];
   files: BundleFileInfo[];
+  bundleName?: string;    // 用户自定义名称，可选
+  totalSize: number;
   oneTime?: boolean;
   createdAt: number;
   expiresAt?: number;
+  consumedAt?: number;
 }
 
-// 兼容旧版的分享项类型
-export interface ShareItem {
+// 分享数据联合类型
+export type ShareData = SingleShareData | BundleShareData;
+
+// === 分享列表项类型（API /list 返回给前端） ===
+export type ShareListItem = {
   token: string;
-  fileKey: string;
-  fileName: string;
-  fileSize: number;
-  oneTime?: boolean;
-  createdAt: number;
-  expiresAt?: number;
-  type?: ShareType;
-  files?: BundleFileInfo[];
-}
+} & (
+  | {
+      type: 'single';
+      fileKey: string;
+      fileName: string;
+      fileSize: number;
+      oneTime?: boolean;
+      createdAt: number;
+      expiresAt?: number;
+    }
+  | {
+      type: 'bundle';
+      files: BundleFileInfo[];
+      bundleName?: string;
+      totalSize: number;
+      oneTime?: boolean;
+      createdAt: number;
+      expiresAt?: number;
+    }
+);
 
 // 创建分享请求
 export interface CreateShareRequest {
   type?: ShareType;
   fileKey?: string;       // single 模式
   fileKeys?: string[];    // bundle 模式
+  bundleName?: string;    // 用户自定义打包名称（bundle 模式）
   expireIn?: number;
   oneTime?: boolean;
 }
@@ -147,6 +167,8 @@ export interface ShareMetaResponse {
   mimeType?: string;
   // bundle 模式字段
   files?: BundleFileInfo[];
+  bundleName?: string;  // bundle 显示名称
+  totalSize?: number;   // bundle 总大小
   // 通用字段
   oneTime?: boolean;
   createdAt: number;

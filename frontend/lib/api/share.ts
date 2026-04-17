@@ -1,12 +1,12 @@
 import { client } from "@/lib/api/client";
 import { API_URL, unwrap } from "@/lib/api/config";
-import { ShareItem, CreateShareRequest, ShareMetaResponse } from "@shared/types";
+import { ShareListItem, CreateShareRequest, ShareMetaResponse } from "@shared/types";
 
 export const shareApi = {
   /**
    * 获取所有分享链接列表
    */
-  list: async (): Promise<ShareItem[]> => {
+  list: async (): Promise<ShareListItem[]> => {
     const res = await client.share.list.$get();
 
     if (!res.ok) {
@@ -17,12 +17,12 @@ export const shareApi = {
 
     // 兼容不同的返回格式
     if (Array.isArray(result)) {
-      return result as ShareItem[];
+      return result as ShareListItem[];
     }
 
     // 处理 ApiResponse 格式
     if (result && typeof result === 'object' && 'success' in result && result.success && Array.isArray(result.data)) {
-      return result.data as ShareItem[];
+      return result.data as ShareListItem[];
     }
 
     return [];

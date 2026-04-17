@@ -9,7 +9,7 @@ import {
   useActiveItems,
   useFileDataStore,
   useFileUIStore,
-  useActiveSelectedKeys,
+  useHasAnySelection,
 } from "@/stores/file";
 import { ViewMode } from "@/lib/types";
 import { Footer } from "@/components/footer";
@@ -18,14 +18,14 @@ import { FloatingActionButton } from "@/components/FloatingActionButton";
 
 export default function OtterHubPage() {
   const activeItems = useActiveItems();
-  const selectedKeys = useActiveSelectedKeys();
+  const hasAnySelection = useHasAnySelection();
 
   const { fetchNextPage } = useFileDataStore();
   const { viewMode } = useFileUIStore();
 
   const isListOrGrid = [ViewMode.Grid, ViewMode.List].includes(viewMode);
 
-  const showBatchBar = selectedKeys.length > 0 && isListOrGrid;
+  const showBatchBar = hasAnySelection && isListOrGrid;
 
   const isEmpty = activeItems.length === 0;
   

@@ -241,3 +241,7 @@ export const useActiveItems = () =>
 
 export const useBucketItems = (type: FileType) =>
   useFileDataStore((s) => s.buckets[type].items);
+
+/** 获取所有 buckets（用于跨类型操作） */
+export const useFileBuckets = () =>
+  useFileDataStore((s) => s.buckets);

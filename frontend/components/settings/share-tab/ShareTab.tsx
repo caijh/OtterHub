@@ -4,7 +4,7 @@ import { Loader2, Trash2, Copy, RefreshCw, Inbox } from "lucide-react";
 import { toast } from "sonner";
 
 import { shareApi } from "@/lib/api";
-import { ShareItem } from "@shared/types";
+import { ShareListItem } from "@shared/types";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatFileSize } from "@/lib/utils";
 
 export function ShareTab() {
-  const [shares, setShares] = useState<ShareItem[]>([]);
+  const [shares, setShares] = useState<ShareListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [revoking, setRevoking] = useState<string[]>([]);
 
@@ -83,23 +83,38 @@ export function ShareTab() {
       const isExpired = s.expiresAt && s.expiresAt < Date.now();
       const isRevoking = revoking.includes(s.token);
 
+      // 根据类型确定显示内容
+      const displayName = s.type === 'bundle'
+        ? s.bundleName || `share-${s.token.slice(0, 8)}`
+        : s.fileName;
+      const displaySize = s.type === 'bundle'
+        ? s.totalSize
+        : s.fileSize;
+
       return (
         <TableRow key={s.token} className="group transition-colors">
           <TableCell>
             <div className="flex flex-col gap-1">
-              <span className="truncate max-w-[200px] font-medium" title={s.fileName}>
-                {s.fileName}
+              <span className="truncate max-w-[200px] font-medium" title={displayName}>
+                {displayName}
               </span>
               <span className="text-xs text-muted-foreground">
-                {formatFileSize(s.fileSize)}
+                {formatFileSize(displaySize)}
               </span>
             </div>
           </TableCell>
 
           <TableCell>
-            <Badge variant={s.oneTime ? "secondary" : "outline"} className="whitespace-nowrap">
-              {s.oneTime ? "阅后即焚" : "普通分享"}
-            </Badge>
+            <div className="flex flex-col gap-1">
+              <Badge variant={s.oneTime ? "secondary" : "outline"} className="whitespace-nowrap w-fit">
+                {s.oneTime ? "阅后即焚" : "普通分享"}
+              </Badge>
+              {s.type === 'bundle' && (
+                <Badge variant="outline" className="whitespace-nowrap w-fit">
+                  {s.files.length} 个文件
+                </Badge>
+              )}
+            </div>
           </TableCell>
 
           <TableCell className="text-muted-foreground whitespace-nowrap text-sm">

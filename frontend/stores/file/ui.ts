@@ -4,6 +4,7 @@ import { useFileDataStore } from "./data";
 import { ViewMode, SortType, SortOrder } from "@/lib/types";
 import { FileType } from "@shared/types";
 import { storeKey } from "..";
+import { useMemo } from "react";
 
 interface FileUIState {
   viewMode: ViewMode;
@@ -156,4 +157,59 @@ export const useActiveSelectedKeys = () => {
   const activeType = useFileDataStore((s) => s.activeType);
   const selectedKeys = useFileUIStore((s) => s.selectedKeys);
   return selectedKeys[activeType] || [];
+};
+
+// ========== 跨类型批量操作 Hooks ==========
+
+/** 获取所有类型中选中的 key */
+export const useTotalSelectedKeys = () => {
+  const selectedKeys = useFileUIStore((s) => s.selectedKeys);
+  return useMemo(() => Object.values(selectedKeys).flat(), [selectedKeys]);
+};
+
+/** 获取所有类型中选中的总数 */
+export const useTotalSelectedCount = () => {
+  const selectedKeys = useFileUIStore((s) => s.selectedKeys);
+  return useMemo(() => Object.values(selectedKeys).flat().length, [selectedKeys]);
+};
+
+/** 检查是否有任何选中的文件 */
+export const useHasAnySelection = () => {
+  const selectedKeys = useFileUIStore((s) => s.selectedKeys);
+  return useMemo(() => Object.values(selectedKeys).some(keys => keys.length > 0), [selectedKeys]);
+};
+
+/** 按类型分组的选中统计 */
+export const useSelectedStats = () => {
+  const selectedKeys = useFileUIStore((s) => s.selectedKeys);
+  return useMemo(() =>
+    Object.entries(selectedKeys)
+      .map(([type, keys]) => ({ type: type as FileType, count: (keys as string[]).length }))
+      .filter(s => s.count > 0),
+    [selectedKeys]
+  );
+};
+
+/** 清空所有类型的选中 */
+export const clearAllSelection = () => {
+  useFileUIStore.setState({
+    selectedKeys: {
+      [FileType.Image]: [],
+      [FileType.Audio]: [],
+      [FileType.Video]: [],
+      [FileType.Document]: [],
+      [FileType.Trash]: [],
+    },
+  });
+};
+
+/** 从所有类型中移除指定的 keys */
+export const removeSelectionFromAllTypes = (keysToRemove: string[]) => {
+  const keysSet = new Set(keysToRemove);
+  useFileUIStore.setState((state) => ({
+    selectedKeys: Object.entries(state.selectedKeys).reduce((acc, [type, keys]) => {
+      acc[type as FileType] = keys.filter(key => !keysSet.has(key));
+      return acc;
+    }, {} as Record<FileType, string[]>),
+  }));
 };

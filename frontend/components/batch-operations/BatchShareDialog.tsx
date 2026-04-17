@@ -32,14 +32,15 @@ interface BatchShareDialogProps {
 }
 
 /**
- * 打包分享对话框组件
- * 将多个文件打包为一个分享链接
+ * 分享对话框组件
+ * 支持单文件分享和打包分享（多文件）
  */
 export function BatchShareDialog({
   files,
   open,
   onOpenChange,
 }: BatchShareDialogProps) {
+  const isSingleFile = files.length === 1;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
 
@@ -47,6 +48,7 @@ export function BatchShareDialog({
   const [expireIn, setExpireIn] = useState<string>('3600');
   const [customDays, setCustomDays] = useState<string>('1');
   const [oneTime, setOneTime] = useState(false);
+  const [bundleName, setBundleName] = useState<string>('');
 
   // 对话框打开时重置状态
   useEffect(() => {
@@ -55,6 +57,7 @@ export function BatchShareDialog({
       setExpireIn('3600');
       setCustomDays('1');
       setOneTime(false);
+      setBundleName('');
     }
   }, [open]);
 
@@ -77,15 +80,17 @@ export function BatchShareDialog({
       }
 
       const data = await shareApi.create({
-        type: 'bundle',
-        fileKeys: files.map(f => f.name),
+        type: isSingleFile ? 'single' : 'bundle',
+        fileKey: isSingleFile ? files[0].name : undefined,
+        fileKeys: isSingleFile ? undefined : files.map(f => f.name),
+        bundleName: isSingleFile ? undefined : (bundleName.trim() || undefined),
         expireIn: seconds,
         oneTime,
       });
 
       const url = `${window.location.origin}/s?k=${data.token}`;
       setShareLink(url);
-      toast.success(`成功创建打包分享链接（${data.fileCount || files.length} 个文件）`);
+      toast.success(isSingleFile ? '成功创建分享链接' : `成功创建打包分享链接（${files.length} 个文件）`);
     } catch (error) {
       toast.error('创建分享链接失败');
       console.error(error);
@@ -106,6 +111,7 @@ export function BatchShareDialog({
     setExpireIn('3600');
     setCustomDays('1');
     setOneTime(false);
+    setBundleName('');
   };
 
   const handleClose = (val: boolean) => {
@@ -121,26 +127,48 @@ export function BatchShareDialog({
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             <Share2 className="h-5 w-5 text-primary" />
-            打包分享
+            {isSingleFile ? '分享文件' : '打包分享'}
           </DialogTitle>
           <DialogDescription>
-            将选中的文件打包为一个分享链接
+            {isSingleFile ? '为选中的文件创建分享链接' : '将选中的文件打包为一个分享链接'}
           </DialogDescription>
         </DialogHeader>
 
         {!shareLink ? (
           <div className="grid gap-4 py-4">
-            {/* 选中的文件数量 */}
+            {/* 选中的文件信息 */}
             <div className="p-3 rounded-lg bg-secondary/30 border border-glass-border">
               <p className="text-sm text-foreground/60 flex items-center gap-2">
                 <Info className="h-4 w-4 text-primary" />
-                已选中{' '}
-                <span className="font-bold text-primary">
-                  {files.length}
-                </span>{' '}
-                个文件
+                {isSingleFile ? (
+                  <span className="truncate" title={files[0]?.metadata?.fileName || files[0]?.name}>
+                    {files[0]?.metadata?.fileName || files[0]?.name}
+                  </span>
+                ) : (
+                  <>
+                    已选中{' '}
+                    <span className="font-bold text-primary">{files.length}</span>{' '}
+                    个文件
+                  </>
+                )}
               </p>
             </div>
+
+            {/* 分享名称（仅多文件时显示） */}
+            {!isSingleFile && (
+              <div className="grid gap-2">
+                <Label htmlFor="bundle-name">分享名称（可选）</Label>
+                <Input
+                  id="bundle-name"
+                  type="text"
+                  value={bundleName}
+                  onChange={(e) => setBundleName(e.target.value)}
+                  placeholder={`默认：share-xxx`}
+                  disabled={isSubmitting}
+                  className="bg-secondary/30 border-glass-border text-foreground"
+                />
+              </div>
+            )}
 
             {/* 过期时间选择 */}
             <div className="grid gap-2">

@@ -25,7 +25,7 @@ export function ThemeToggle() {
   }
 
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={0}>
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
@@ -33,6 +33,7 @@ export function ThemeToggle() {
             size="icon"
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
             className="h-9 w-9 text-foreground/60 hover:text-foreground hover:bg-secondary/50"
+            suppressHydrationWarning
           >
             {resolvedTheme === "dark" ? (
               <Moon className="h-4 w-4" />

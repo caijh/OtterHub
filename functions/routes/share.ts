@@ -6,7 +6,7 @@ import { fail, ok } from '@utils/response';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import type { Env, KVNamespace } from '../types/hono';
 import { getFileTypeByName } from '@utils/file';
-import { MAX_CHUNK_SIZE, BundleFileInfo, MAX_FILES_IN_BUNDLE } from '@shared/types';
+import { MAX_CHUNK_SIZE, BundleFileInfo, MAX_FILES_IN_BUNDLE, ShareData, SingleShareData, BundleShareData, ShareListItem, MAX_FILENAME_LENGTH } from '@shared/types';
 import { authMiddleware } from 'middleware/auth';
 import { ZipWriter, BlobReader, configure } from '@zip.js/zip.js';
 
@@ -19,31 +19,6 @@ configure({
 const app = new Hono<{ Bindings: Env }>();
 
 const shareKeyPrefix = 'share:';
-
-// --- Types ---
-
-interface SingleShareData {
-  type: 'single';
-  fileKey: string;
-  oneTime?: boolean;
-  createdAt: number;
-  fileName: string;
-  fileSize: number;
-  expiresAt?: number;
-  consumedAt?: number;
-}
-
-interface BundleShareData {
-  type: 'bundle';
-  fileKeys: string[];
-  files: BundleFileInfo[];
-  oneTime?: boolean;
-  createdAt: number;
-  expiresAt?: number;
-  consumedAt?: number;
-}
-
-type ShareData = SingleShareData | BundleShareData;
 
 // --- Helpers ---
 
@@ -119,6 +94,7 @@ const createShareSchema = z.object({
   type: z.enum(['single', 'bundle']).default('single'),
   fileKey: z.string().optional(),       // single 模式
   fileKeys: z.array(z.string()).optional(), // bundle 模式
+  bundleName: z.string().optional(),    // bundle 模式下用户自定义名称
   expireIn: z.number().optional(), // Seconds from now, undefined means forever (or max KV limit)
   oneTime: z.boolean().optional(),
 });
@@ -129,7 +105,7 @@ app.post(
   authMiddleware,
   zValidator('json', createShareSchema),
   async (c) => {
-    const { type, fileKey, fileKeys, expireIn, oneTime } = c.req.valid('json');
+    const { type, fileKey, fileKeys, bundleName, expireIn, oneTime } = c.req.valid('json');
     const kv = c.env.oh_file_url;
     const db = DBAdapterFactory.getAdapter(c.env);
 
@@ -186,10 +162,15 @@ app.post(
       return fail(c, 'No valid files found', 404);
     }
 
+    // 计算总大小（bundleName 由用户输入，未输入时为 undefined）
+    const totalSize = calcBundleTotalSize(files);
+
     const shareData: BundleShareData = {
       type: 'bundle',
       fileKeys: files.map(f => f.key),
       files,
+      bundleName,
+      totalSize,
       oneTime,
       createdAt: now,
       expiresAt,
@@ -208,7 +189,7 @@ app.get('/list', authMiddleware, async (c) => {
   const kv = c.env.oh_file_url;
   const list = await kv.list({ prefix: shareKeyPrefix });
 
-  const shares: any[] = [];
+  const shares: ShareListItem[] = [];
   if (list && list.keys) {
     for (const key of list.keys) {
       const data = await getKVData<ShareData>(kv, key.name);
@@ -219,6 +200,8 @@ app.get('/list', authMiddleware, async (c) => {
             token,
             type: 'bundle',
             files: data.files,
+            bundleName: data.bundleName,
+            totalSize: data.totalSize,
             oneTime: data.oneTime,
             createdAt: data.createdAt,
             expiresAt: data.expiresAt,
@@ -268,6 +251,8 @@ app.get('/:token/meta', async (c) => {
     return ok(c, {
       type: 'bundle',
       files: shareData.files,
+      bundleName: shareData.bundleName,
+      totalSize: shareData.totalSize,
       oneTime: shareData.oneTime,
       createdAt: shareData.createdAt,
       expiresAt: shareData.expiresAt,
@@ -411,11 +396,18 @@ app.get('/:token/download-all', async (c) => {
     );
   }
 
+  // 使用用户自定义名称或默认名称
+  const zipName = shareData.bundleName || `share-${token.slice(0, 8)}`;
+  // 确保文件名合法（移除特殊字符，限制长度）
+  const safeZipName = zipName
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+    .slice(0, MAX_FILENAME_LENGTH);
+
   // 返回流式响应
   return new Response(readable, {
     headers: {
       'Content-Type': 'application/zip',
-      'Content-Disposition': `attachment; filename="share-${token.slice(0, 8)}.zip"`,
+      'Content-Disposition': `attachment; filename="${safeZipName}.zip"`,
     },
   });
 });
