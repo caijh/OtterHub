@@ -22,7 +22,7 @@ import { BatchRenameDialog } from "./BatchRenameDialog";
 import { BatchShareDialog } from "./BatchShareDialog";
 import { DownloadDirectoryGuide } from "@/components/download/DownloadDirectoryGuide";
 import { toast } from "sonner";
-import { FileType, MAX_FILES_IN_BUNDLE } from "@shared/types";
+import { FileTag, FileType, MAX_FILES_IN_BUNDLE } from "@shared/types";
 
 // 文件类型图标映射
 const typeIcons: Record<FileType, typeof ImageIcon> = {
@@ -114,7 +114,7 @@ export function BatchOperationsBar() {
 
   /** ===== 批量标签成功回调 ===== */
   const handleBatchTagSuccess = (
-    updatedFiles: Array<{ name: string; tags: string[] }>,
+    updatedFiles: Array<{ name: string; tags: FileTag[] }>,
   ) => {
     updatedFiles.forEach(({ name, tags }) => {
       const file = allItemMap.get(name);

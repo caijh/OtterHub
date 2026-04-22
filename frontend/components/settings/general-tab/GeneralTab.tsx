@@ -13,7 +13,8 @@ import {
   Trash2,
   RefreshCw,
   Download,
-  AlertCircle
+  AlertCircle,
+  Tags
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -29,6 +30,7 @@ import {
   clearDirectoryHandleCache,
   pickDownloadDirectoryForFirstTime,
 } from "@/lib/utils/file";
+import { TagSelector } from "@/components/TagSelector";
 
 export function GeneralTab() {
   const { 
@@ -36,6 +38,8 @@ export function GeneralTab() {
     setDataSaverThreshold, 
     nsfwDetection, 
     setNsfwDetection,
+    defaultUploadTags,
+    setDefaultUploadTags,
     fetchSettings,
     syncSettings
   } = useGeneralSettingsStore();
@@ -238,6 +242,31 @@ export function GeneralTab() {
               <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5 bg-muted/30 p-2 rounded-lg border border-border/20">
                 <Info className="h-3 w-3 mt-0.5 shrink-0 opacity-60" />
                 开启后，系统将在浏览器端使用 TensorFlow.js 对图片进行识别。这可能会消耗较多内存和 CPU。
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 3. 默认上传标签 */}
+        <Card className="border border-border/40 shadow-sm bg-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2 mb-1">
+              <Tags className="h-4 w-4 text-blue-500" />
+              <CardTitle className="text-base">默认上传标签</CardTitle>
+            </div>
+            <CardDescription>上传文件时自动应用的标签</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="flex flex-col space-y-3">
+              <TagSelector
+                tags={defaultUploadTags}
+                onChange={setDefaultUploadTags}
+                placeholder="选择默认标签..."
+              />
+              
+              <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5 bg-muted/30 p-2 rounded-lg border border-border/20">
+                <Info className="h-3 w-3 mt-0.5 shrink-0 opacity-60" />
+                设置后，所有上传的文件都会自动应用这些标签。例如，选择&ldquo;Private&rdquo;标签可以让上传的文件默认为私有。
               </p>
             </div>
           </CardContent>

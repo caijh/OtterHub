@@ -38,7 +38,7 @@ export function FilterDropdown() {
     filterDateRange.start || filterDateRange.end,
   ].filter(Boolean).length;
 
-  const toggleTag = (tag: string) => {
+  const toggleTag = (tag: FileTag) => {
     if (filterTags.includes(tag)) {
       setFilterTags(filterTags.filter((t) => t !== tag));
     } else {

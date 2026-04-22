@@ -1,6 +1,12 @@
 import { client } from "./client";
 import { API_URL, unwrap } from "./config";
-import { ApiResponse, FileType, ListFilesResponse } from "@shared/types";
+import {
+  ApiResponse,
+  ChunkUploadInitPayload,
+  FileTag,
+  ListFilesResponse,
+  SingleUploadPayload,
+} from "@shared/types";
 import { ListFilesRequest } from "@/lib/types";
 
 export type UploadProgress = {
@@ -101,12 +107,13 @@ export async function uploadFile(file: File, nsfw?: boolean): Promise<string> {
 
 export async function uploadFileWithProgress(
   file: File,
-  nsfw: boolean | undefined,
+  options: SingleUploadPayload,
   onProgress?: (p: UploadProgress) => void,
 ): Promise<string> {
   const form = new FormData();
   form.append("file", file);
-  form.append("nsfw", nsfw ? "true" : "false");
+  form.append("nsfw", options.nsfw ? "true" : "false");
+  form.append("tags", JSON.stringify(options.tags ?? []));
 
   const url = `${API_URL}/upload`;
   return xhrPostForm<string>(url, form, onProgress);
@@ -116,19 +123,11 @@ export async function uploadFileWithProgress(
  * 初始化分片上传
  */
 export async function uploadChunkInit(
-  fileType: FileType,
-  fileName: string,
-  fileSize: number,
-  totalChunks: number
+  payload: ChunkUploadInitPayload,
 ): Promise<string> {
   return unwrap<string>(
-    client.upload.chunk.init.$get({
-      query: {
-        fileType,
-        fileName,
-        fileSize: fileSize.toString(),
-        totalChunks: totalChunks.toString(),
-      },
+    client.upload.chunk.init.$post({
+      json: payload,
     })
   );
 }
@@ -286,7 +285,7 @@ export async function toggleLike(key: string): Promise<boolean> {
  */
 export async function editMetadata(
   key: string,
-  updates: { fileName?: string; tags?: string[]; desc?: string }
+  updates: { fileName?: string; tags?: FileTag[]; desc?: string }
 ): Promise<{ metadata: any }> {
   const data = await unwrap<any>(
     client.file[":key"].meta.$patch({

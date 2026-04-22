@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface TagSelectorProps {
-  tags: string[];
-  onChange: (tags: string[]) => void;
+  tags: FileTag[];
+  onChange: (tags: FileTag[]) => void;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -37,7 +37,7 @@ export function TagSelector({
   };
 
   // 移除标签
-  const handleRemoveTag = (tagToRemove: string) => {
+  const handleRemoveTag = (tagToRemove: FileTag) => {
     onChange(tags.filter((tag) => tag !== tagToRemove));
   };
 
@@ -46,7 +46,7 @@ export function TagSelector({
       <div className="flex flex-wrap gap-2 min-h-9.5 p-2 rounded-lg bg-secondary/30 border border-glass-border">
         {/* 已选标签：纯展示 + 删除 */}
         {tags.map((tag) => {
-          const config = TAG_CONFIG[tag as FileTag];
+          const config = TAG_CONFIG[tag];
           return (
             <div
               key={tag}
@@ -90,11 +90,11 @@ export function TagSelector({
               className="bg-popover border-glass-border min-w-50"
             >
               {availableTags.map((tag) => {
-                const config = TAG_CONFIG[tag as FileTag];
+                const config = TAG_CONFIG[tag];
                 return (
                   <DropdownMenuItem
                     key={tag}
-                    onClick={() => handleAddTag(tag as FileTag)}
+                    onClick={() => handleAddTag(tag)}
                     className="text-foreground hover:bg-secondary/50 focus:bg-secondary/50 cursor-pointer"
                   >
                     <div className="flex items-center justify-between w-full">

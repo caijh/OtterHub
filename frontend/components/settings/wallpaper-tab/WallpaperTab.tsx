@@ -96,8 +96,9 @@ export function WallpaperTab() {
     try {
       const fileName = `${wp.source}_${wp.id}.jpg`;
       const isNsfw = wp.purity === 'nsfw';
+      const tags = isNsfw ? [FileTag.NSFW] : [];
 
-      const { key, fileSize } = await uploadByUrl(wp.rawUrl, fileName, isNsfw);
+      const { key, fileSize } = await uploadByUrl(wp.rawUrl, fileName, isNsfw, tags);
 
       const fileItem: FileItem = {
         name: key,
@@ -106,7 +107,7 @@ export function WallpaperTab() {
           fileSize,
           uploadedAt: Date.now(),
           liked: false,
-          tags: isNsfw ? [FileTag.NSFW] : [],
+          tags,
         },
       };
       addFileLocal(fileItem, FileType.Image);

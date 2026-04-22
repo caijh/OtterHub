@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { editMetadata, analyzeImage, getFileUrl } from "@/lib/api";
-import { FileItem, MAX_FILENAME_LENGTH, MAX_DESC_LENGTH, FileType } from "@shared/types";
+import { FileItem, FileTag, MAX_FILENAME_LENGTH, MAX_DESC_LENGTH, FileType } from "@shared/types";
 import { compressImageFromUrl } from "@/lib/utils/file";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { TagSelector } from "@/components/TagSelector";
@@ -23,7 +23,7 @@ interface EditMetadataDialogProps {
   file: FileItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: (metadata: { fileName: string; tags: string[]; desc?: string }) => void;
+  onSuccess?: (metadata: { fileName: string; tags: FileTag[]; desc?: string }) => void;
 }
 
 export function FileEditDialog({
@@ -34,7 +34,7 @@ export function FileEditDialog({
 }: EditMetadataDialogProps) {
   const [baseName, setBaseName] = useState("");
   const [extension, setExtension] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<FileTag[]>([]);
   const [desc, setDesc] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);

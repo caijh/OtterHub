@@ -19,7 +19,7 @@ import { MAX_CONCURRENTS } from "@/lib/types";
 
 export function FileUploadZone() {
   const addFileLocal = useFileDataStore((s) => s.addFileLocal);
-  const { nsfwDetection } = useGeneralSettingsStore();
+  const { nsfwDetection, defaultUploadTags } = useGeneralSettingsStore();
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
     {},
@@ -63,7 +63,7 @@ export function FileUploadZone() {
           const isUnsafe = nsfwDetection
             ? await nsfwDetector.isUnsafeImg(file)
             : false;
-          const key = await uploadFileWithProgress(file, isUnsafe, (p) => {
+          const key = await uploadFileWithProgress(file, { nsfw: isUnsafe, tags: defaultUploadTags }, (p) => {
             uploadProgressMap[tmpKey] = p.percent;
             setUploadProgress({ ...uploadProgressMap });
           });
@@ -111,12 +111,13 @@ export function FileUploadZone() {
           const fileType = getFileType(file.type, file.name);
           const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
 
-          const key = await uploadChunkInit(
+          const key = await uploadChunkInit({
             fileType,
-            file.name,
-            file.size,
+            fileName: file.name,
+            fileSize: file.size,
             totalChunks,
-          );
+            tags: defaultUploadTags,
+          });
 
           const missing = getMissingChunkIndices(totalChunks);
           const uploadedBytesByChunk = new Map<number, number>();
@@ -254,8 +255,8 @@ export function FileUploadZone() {
         });
       }
     },
-    [addFileLocal, nsfwDetection],
-  ); // 确保 nsfwDetection 在依赖项中
+    [addFileLocal, nsfwDetection, defaultUploadTags],
+  );
 
   const handleFiles = async (files: FileList | File[]) => {
     const fileArray = Array.isArray(files) ? files : Array.from(files);

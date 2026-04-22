@@ -10,6 +10,7 @@ export interface GeneralSettings {
   safeMode: boolean;
   nsfwDetection: boolean;
   imageLoadMode: ImageLoadMode;
+  defaultUploadTags: FileTag[]; // 默认上传标签
 }
 
 
@@ -44,7 +45,7 @@ export type FileMetadata = {
   fileSize: number;
   uploadedAt: number;   // 时间戳
   liked: boolean;      // 是否被收藏
-  tags?: FileTag[] | string[];
+  tags?: FileTag[];
   chunkInfo?: ChunkInfo; // 分片信息（大文件分片上传时使用）
   thumbUrl?: string; // 缩略图URL
   desc?: string;     // 图片简短描述（上传后 AI 自动分析填充）
@@ -53,6 +54,28 @@ export type FileMetadata = {
 export enum FileTag {
   NSFW = 'nsfw',  // 非安全内容
   Private = 'private',  // 私有文件, 不允许其他人通过url直接访问到
+}
+
+export type UploadTagsInput = FileTag[];
+
+export interface SingleUploadPayload {
+  nsfw?: boolean;
+  tags?: UploadTagsInput;
+}
+
+export interface ChunkUploadInitPayload {
+  fileType: FileType;
+  fileName: string;
+  fileSize: number;
+  totalChunks: number;
+  tags?: UploadTagsInput;
+}
+
+export interface UrlUploadPayload {
+  url: string;
+  fileName?: string;
+  isNsfw?: boolean;
+  tags?: UploadTagsInput;
 }
 
 // 分片信息（用于大文件分片上传）

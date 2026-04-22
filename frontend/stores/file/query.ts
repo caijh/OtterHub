@@ -4,11 +4,12 @@ import { SortType, SortOrder } from "@/lib/types";
 import { useMemo } from "react";
 import { useActiveItems } from "./data";
 import { storeKey } from "..";
+import { FileTag } from "@shared/types";
 
 interface FileQueryState {
   searchQuery: string;
   filterLiked: boolean;
-  filterTags: string[];
+  filterTags: FileTag[];
   filterDateRange: { start?: number; end?: number };
   sortType: SortType;
   sortOrder: SortOrder;
@@ -16,7 +17,7 @@ interface FileQueryState {
   // Actions
   setSearchQuery: (query: string) => void;
   setFilterLiked: (liked: boolean) => void;
-  setFilterTags: (tags: string[]) => void;
+  setFilterTags: (tags: FileTag[]) => void;
   setFilterDateRange: (range: { start?: number; end?: number }) => void;
   setSortType: (type: SortType) => void;
   setSortOrder: (order: SortOrder) => void;
@@ -69,10 +70,10 @@ export const useFileQueryStore = create<FileQueryState>()(
 export const useAvailableTags = () => {
   const items = useActiveItems();
   return useMemo(() => {
-    const tags = new Set<string>();
+    const tags = new Set<FileTag>();
     items.forEach((item) => {
       if (item.metadata?.tags) {
-        (item.metadata.tags as string[]).forEach((tag) => tags.add(tag));
+        item.metadata.tags.forEach((tag) => tags.add(tag));
       }
     });
     return Array.from(tags).sort();
@@ -92,7 +93,7 @@ export const useFilteredFiles = () => {
         const matchesName = name.includes(query) || (query.length >= 3 && item.name.toLowerCase().includes(query));
         // 同时搜索图片描述与标签，保证检索能力与 metadata 增强保持一致。
         const desc = item.metadata?.desc?.toLowerCase() ?? "";
-        const tagText = ((item.metadata?.tags || []) as string[]).join(" ").toLowerCase();
+        const tagText = (item.metadata?.tags || []).join(" ").toLowerCase();
         const matchesDesc = query.length >= 2 && (desc.includes(query) || tagText.includes(query));
         if (!matchesName && !matchesDesc) return false;
       }
@@ -101,7 +102,7 @@ export const useFilteredFiles = () => {
 
       // 标签过滤
       if (filterTags.length > 0) {
-        const itemTags = (item.metadata?.tags || []) as string[];
+        const itemTags = item.metadata?.tags || [];
         if (!filterTags.every(tag => itemTags.includes(tag))) return false;
       }
       // 日期筛选

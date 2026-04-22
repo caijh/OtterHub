@@ -20,7 +20,7 @@ interface BatchAddTagsDialogProps {
   files: FileItem[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: (updatedFiles: Array<{ name: string; tags: string[] }>) => void;
+  onSuccess?: (updatedFiles: Array<{ name: string; tags: FileTag[] }>) => void;
 }
 
 export function BatchEditTagsDialog({
@@ -67,14 +67,14 @@ export function BatchEditTagsDialog({
     setIsSubmitting(true);
 
     try {
-      const updatedFiles: Array<{ name: string; tags: string[] }> = [];
+      const updatedFiles: Array<{ name: string; tags: FileTag[] }> = [];
       setProgress({ current: 0, total: files.length });
 
       await processBatch(
         files,
         async (file) => {
           const newTags = applyTagStates(
-            (file.metadata?.tags ?? []) as FileTag[],
+            file.metadata?.tags ?? [],
             currentStates,
             originalStates,
           );

@@ -16,7 +16,7 @@ listRoutes.get(
     z.object({
       limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 50),
       cursor: z.string().optional(),
-      fileType: z.nativeEnum(FileType).optional(),
+      fileType: z.enum(FileType).optional(),
     })
   ),
   async (c) => {

@@ -6,6 +6,7 @@ import { DBAdapterFactory } from '@utils/db-adapter';
 import { proxyGet } from '@utils/proxy';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
+import { normalizeUploadTags } from '@utils/upload-tags';
 import {
   extractMimeType,
   extractFileNameFromDisposition,
@@ -24,10 +25,11 @@ urlUploadRoutes.post(
       url: z.string().url(),
       fileName: z.string().optional(),
       isNsfw: z.boolean().optional().default(false),
+      tags: z.array(z.enum(FileTag)).optional(),
     })
   ),
   async (c) => {
-    const { url, fileName, isNsfw } = c.req.valid('json');
+    const { url, fileName, isNsfw, tags } = c.req.valid('json');
 
     try {
       const response = await proxyGet(url);
@@ -64,7 +66,7 @@ urlUploadRoutes.post(
         fileSize,
         uploadedAt: Date.now(),
         liked: false,
-        tags: isNsfw ? [FileTag.NSFW] : [],
+        tags: normalizeUploadTags(tags, { forceNsfw: isNsfw }),
       };
 
       const { key } = await dbAdapter.uploadStream(

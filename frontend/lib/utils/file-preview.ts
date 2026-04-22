@@ -3,7 +3,7 @@ import { ImageLoadMode } from "../types";
 
 
 // 判断是否为 NSFW 内容
-export function isNSFW(tags?: (FileTag | string)[]): boolean {
+export function isNSFW(tags?: FileTag[]): boolean {
   return tags?.includes(FileTag.NSFW) ?? false;
 }
 
@@ -13,7 +13,7 @@ export function shouldBlur({
   tags,
 }: {
   safeMode: boolean;
-  tags?: (FileTag | string)[];
+  tags?: FileTag[];
 }): boolean {
   return safeMode && isNSFW(tags);
 }

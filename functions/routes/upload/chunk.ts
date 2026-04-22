@@ -1,29 +1,31 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { FileType, FileMetadata, chunkPrefix, MAX_FILENAME_LENGTH, MAX_FILE_SIZE, MAX_CHUNK_NUM } from '@shared/types';
+import { FileType, FileMetadata, FileTag, chunkPrefix, MAX_FILENAME_LENGTH, MAX_FILE_SIZE, MAX_CHUNK_NUM } from '@shared/types';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { getUniqueFileId, buildKeyId, getFileExt } from '@utils/file';
 import { TEMP_CHUNK_TTL } from 'types';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
+import { normalizeUploadTags } from '@utils/upload-tags';
 
 export const chunkUploadRoutes = new Hono<{ Bindings: Env }>();
 
 // 初始化分片上传
-chunkUploadRoutes.get(
+chunkUploadRoutes.post(
   '/chunk/init',
   zValidator(
-    'query',
+    'json',
     z.object({
-      fileType: z.nativeEnum(FileType),
+      fileType: z.enum(FileType),
       fileName: z.string().min(1).max(MAX_FILENAME_LENGTH),
-      fileSize: z.string().transform(v => parseInt(v, 10)),
-      totalChunks: z.string().transform(v => parseInt(v, 10)),
+      fileSize: z.number().int().positive(),
+      totalChunks: z.number().int().positive(),
+      tags: z.array(z.enum(FileTag)).optional(),
     })
   ),
   async (c) => {
-    const { fileType, fileName, fileSize, totalChunks } = c.req.valid('query');
+    const { fileType, fileName, fileSize, totalChunks, tags } = c.req.valid('json');
 
     if (fileSize > MAX_FILE_SIZE || totalChunks > MAX_CHUNK_NUM) {
       return fail(c, "File size exceeds the limit", 400);
@@ -37,6 +39,7 @@ chunkUploadRoutes.get(
       fileSize,
       uploadedAt: Date.now(),
       liked: false,
+      tags: normalizeUploadTags(tags),
       chunkInfo: {
         total: totalChunks,
         uploadedIndices: [],

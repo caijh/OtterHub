@@ -1,5 +1,5 @@
 import { client } from "./client";
-import { WallpaperSourceId, UnifiedWallpaper } from "@shared/types";
+import { FileTag, WallpaperSourceId, UnifiedWallpaper } from "@shared/types";
 import { unwrap } from "./config";
 
 /**
@@ -35,7 +35,8 @@ export async function getWallpapers(
 export async function uploadByUrl(
   url: string,
   fileName: string,
-  isNsfw: boolean = false
+  isNsfw: boolean = false,
+  tags: FileTag[] = [],
 ): Promise<any> {
   return unwrap<any>(
     client.upload["by-url"].$post({
@@ -43,6 +44,7 @@ export async function uploadByUrl(
         url,
         fileName,
         isNsfw,
+        tags,
       },
     })
   );

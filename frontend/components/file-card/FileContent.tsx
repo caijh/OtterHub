@@ -17,7 +17,7 @@ interface FileContentProps {
   fileKey: string;
   safeMode: boolean;
   canPreview: boolean;
-  tags?: FileTag[] | string[];
+  tags?: FileTag[];
   fileSize?: number;
   imageLoadMode: ImageLoadMode;
   thumbUrl?: string;
