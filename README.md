@@ -108,7 +108,10 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 
 ### 提交前检查
 
-项目使用 Husky + lint-staged 管理 pre-commit hook。提交时会自动对 staged 文件运行 Prettier，并执行 `npm run typecheck`。
+项目使用 Husky + lint-staged 管理本地检查：
+
+- commit 前：对 staged 文件运行 Prettier，并执行 `npm run typecheck`
+- push 前：执行 `npm run build` 和 `npm run ci-test`
 
 ---
 
