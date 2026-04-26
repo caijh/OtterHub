@@ -43,6 +43,7 @@ function LoginContent() {
   });
 
   const onSubmit = async (values: LoginFormValues) => {
+    if (loading) return;
     setLoading(true);
     try {
       await login(values.password);
@@ -56,6 +57,7 @@ function LoginContent() {
       setLoading(false);
     }
   };
+  const submitLogin = form.handleSubmit(onSubmit);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center w-full max-w-[320px] z-10 animate-in fade-in zoom-in duration-700">
@@ -68,7 +70,7 @@ function LoginContent() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4">
+        <form onSubmit={submitLogin} className="w-full space-y-4">
           <FormField
             control={form.control}
             name="password"
@@ -82,6 +84,13 @@ function LoginContent() {
                       placeholder="请输入访问密码"
                       className="h-12 pl-11 bg-glass-bg border-glass-border backdrop-blur-md text-foreground placeholder:text-foreground/30 focus-visible:ring-primary/50 transition-all rounded-2xl"
                       disabled={loading}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" || event.nativeEvent.isComposing || loading) {
+                          return;
+                        }
+                        event.preventDefault();
+                        submitLogin();
+                      }}
                       {...field}
                     />
                   </div>
