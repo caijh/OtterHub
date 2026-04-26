@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { 
-  ShieldCheck, Zap, CloudSync, CloudUpload, Info, ShieldAlert, FolderOpen, 
-  Trash2, RefreshCw, Download, AlertCircle, Tags, Sparkles 
+import {
+  ShieldCheck, Eye, CloudSync, CloudUpload, Info, ShieldAlert, FolderOpen,
+  Trash2, RefreshCw, Download, AlertCircle, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,12 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useGeneralSettingsStore } from "@/stores/general-store";
+import { useGeneralSettingsStoreClient, SettingsSnapshot } from "@/stores/general-store";
 import { cn } from "@/lib/utils";
 import {
   loadDirectoryHandle, clearDirectoryHandleCache, pickDownloadDirectoryForFirstTime,
 } from "@/lib/utils/file";
 import { TagSelector } from "@/components/TagSelector";
+import { SafeModeToggle } from "@/components/SafeModeToggle";
+import { ImageLoadModeToggle } from "@/components/ImageLoadModeToggle";
+import { ImageLoadMode } from "@shared/types";
 
 const SettingCard = ({ icon: Icon, iconColor, title, desc, children }: any) => (
   <Card className="border border-border/40 shadow-sm bg-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden">
@@ -59,13 +62,47 @@ const HintBox = ({ icon: Icon = Info, variant = "default", children }: any) => {
 
 // --- 主组件 ---
 export function GeneralTab() {
-  const store = useGeneralSettingsStore();
+  const store = useGeneralSettingsStoreClient();
   const [isSyncing, setIsSyncing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [localThreshold, setLocalThreshold] = useState(store.dataSaverThreshold.toString());
+  const [localThreshold, setLocalThreshold] = useState("5.0");
   const [currentDir, setCurrentDir] = useState<string | null>(null);
   const [isDirLoading, setIsDirLoading] = useState(false);
   const [supportsFsApi, setSupportsFsApi] = useState(false);
+
+  // SSR 安全处理
+  if (!store) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center text-muted-foreground">
+        <div className="animate-pulse">加载设置中...</div>
+      </div>
+    );
+  }
+
+  // 保存打开面板时的设置快照，用于关闭时对比是否变更
+  const settingsSnapshotRef = useRef<SettingsSnapshot | null>(null);
+
+  // 打开设置面板时：自动拉取云端最新设置，完成后保存快照
+  useEffect(() => {
+    const init = async () => {
+      await store.fetchSettings();
+      settingsSnapshotRef.current = store.getSettingsSnapshot();
+    };
+    init();
+  }, []);
+
+  // 关闭/离开设置面板时：如有变更，自动同步到云端
+  useEffect(() => {
+    return () => {
+      const snapshot = settingsSnapshotRef.current;
+      if (snapshot && store.hasSettingsChanged(snapshot)) {
+        // 静默同步，不阻塞关闭，失败也不提示（下次打开会重试）
+        store.syncSettings().catch(() => {
+          // 静默失败，下次打开时会再次尝试同步
+        });
+      }
+    };
+  }, []);
 
   // 初始化 FsApi & 读取目录
   useEffect(() => {
@@ -77,7 +114,9 @@ export function GeneralTab() {
   }, []);
 
   // 阈值防抖同步
-  useEffect(() => setLocalThreshold(store.dataSaverThreshold.toString()), [store.dataSaverThreshold]);
+  useEffect(() => {
+    setLocalThreshold(store.dataSaverThreshold.toString());
+  }, [store.dataSaverThreshold]);
   useEffect(() => {
     const threshold = parseFloat(localThreshold);
     if (isNaN(threshold) || threshold < 0 || threshold === store.dataSaverThreshold) return;
@@ -90,7 +129,7 @@ export function GeneralTab() {
     setLoader(true);
     try {
       const res = await action();
-      if (successMsg) toast.success(successMsg);
+      // if (successMsg) toast.success(successMsg);
       return res;
     } catch {
       if (errorMsg) toast.error(errorMsg);
@@ -112,6 +151,13 @@ export function GeneralTab() {
     setCurrentDir(null);
   }, setIsDirLoading, "已清除，下次下载需重新选择目录", "清除失败");
 
+  // 手动同步到云端，成功后更新快照避免退出时重复触发
+  const handleManualSync = withLoading(async () => {
+    await store.syncSettings();
+    // 成功后更新快照，避免退出时重复触发自动同步
+    settingsSnapshotRef.current = store.getSettingsSnapshot();
+  }, setIsUploading, "保存成功", "保存失败");
+
   return (
     <div className="flex flex-col h-full overflow-y-auto custom-scrollbar space-y-6 pr-2">
       {/* 头部区域 */}
@@ -121,13 +167,13 @@ export function GeneralTab() {
           <p className="text-sm text-muted-foreground">更改自动保存，可手动同步到云端</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={withLoading(store.fetchSettings, setIsSyncing, "同步成功", "同步失败")} disabled={isSyncing} className="rounded-xl h-9">
+          <Button variant="outline" size="sm" onClick={withLoading(store.fetchSettings, setIsSyncing, "恢复成功", "恢复失败")} disabled={isSyncing} className="rounded-xl h-9">
             <CloudSync className={cn("h-4 w-4 mr-2", isSyncing && "animate-spin")} />
-            从云端同步
+            从云端恢复
           </Button>
-          <Button size="sm" onClick={withLoading(store.syncSettings, setIsUploading, "备份成功", "备份失败")} disabled={isUploading} className="rounded-xl h-9 shadow-sm">
+          <Button size="sm" onClick={handleManualSync} disabled={isUploading} className="rounded-xl h-9 shadow-sm">
             <CloudUpload className={cn("h-4 w-4 mr-2", isUploading && "animate-spin")} />
-            备份到云端
+            保存到云端
           </Button>
         </div>
       </div>
@@ -135,16 +181,38 @@ export function GeneralTab() {
       <Separator className="opacity-50" />
 
       <div className="grid gap-6">
-        {/* 1. 省流模式设置 */}
-        <SettingCard icon={Zap} iconColor="text-amber-500" title="图片加载策略">
-          <div className="flex flex-col space-y-3">
-            <SettingItem title="省流模式阈值">
-              <div className="flex items-center gap-2">
-                <Input type="number" step="0.1" min="0.1" value={localThreshold} onChange={(e) => setLocalThreshold(e.target.value)} className="w-24 h-9 text-right font-mono text-xs rounded-lg bg-background/50" />
-                MB
-              </div>
+        {/* 1. 浏览设置 */}
+        <SettingCard icon={Eye} iconColor="text-blue-500" title="浏览设置">
+          <div className="flex flex-col space-y-4">
+            {/* 安全模式 */}
+            <SettingItem title="安全模式" desc="NSFW 敏感内容显示遮罩">
+              <SafeModeToggle />
             </SettingItem>
-            <HintBox>省流模式下，超过此大小的图片不加载预览。</HintBox>
+
+            {/* 图片加载模式 */}
+            <SettingItem title="图片加载模式">
+              <ImageLoadModeToggle />
+            </SettingItem>
+
+            {/* 省流阈值 - 仅在省流模式显示 */}
+            {store.imageLoadMode === ImageLoadMode.DataSaver && (
+              <>
+                <SettingItem title="省流模式阈值">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      value={localThreshold}
+                      onChange={(e) => setLocalThreshold(e.target.value)}
+                      className="w-24 h-9 text-right font-mono text-xs rounded-lg bg-background/50"
+                    />
+                    MB
+                  </div>
+                </SettingItem>
+                <HintBox>省流模式下，超过此大小的图片不加载预览。</HintBox>
+              </>
+            )}
           </div>
         </SettingCard>
 

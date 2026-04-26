@@ -7,6 +7,16 @@ import { toast } from "sonner";
 import { storeKey } from ".";
 import { FileTag } from "@shared/types";
 
+// 设置快照类型（用于对比变更）
+export interface SettingsSnapshot {
+  dataSaverThreshold: number;
+  safeMode: boolean;
+  nsfwDetection: boolean;
+  imageLoadMode: ImageLoadMode;
+  defaultUploadTags: FileTag[];
+  enableImageAnalysis: boolean;
+}
+
 interface GeneralStoreState {
   dataSaverThreshold: number;
   safeMode: boolean;
@@ -21,9 +31,11 @@ interface GeneralStoreState {
   setImageLoadMode: (mode: ImageLoadMode) => void;
   setDefaultUploadTags: (tags: FileTag[]) => void;
   setEnableImageAnalysis: (enabled: boolean) => void;
-  
+
   fetchSettings: () => Promise<void>;
   syncSettings: () => Promise<void>;
+  getSettingsSnapshot: () => SettingsSnapshot;
+  hasSettingsChanged: (snapshot: SettingsSnapshot) => boolean;
 }
 
 export const useGeneralSettingsStore = create<GeneralStoreState>()(
@@ -84,6 +96,40 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
           console.error("Failed to sync general settings", error);
           throw error;
         }
+      },
+
+      // 获取当前设置的快照
+      getSettingsSnapshot: () => {
+        const {
+          dataSaverThreshold,
+          safeMode,
+          nsfwDetection,
+          imageLoadMode,
+          defaultUploadTags,
+          enableImageAnalysis,
+        } = get();
+        return {
+          dataSaverThreshold,
+          safeMode,
+          nsfwDetection,
+          imageLoadMode,
+          defaultUploadTags: [...defaultUploadTags],
+          enableImageAnalysis,
+        };
+      },
+
+      // 对比当前设置与快照是否变更
+      hasSettingsChanged: (snapshot: SettingsSnapshot) => {
+        const current = get();
+        return (
+          current.dataSaverThreshold !== snapshot.dataSaverThreshold ||
+          current.safeMode !== snapshot.safeMode ||
+          current.nsfwDetection !== snapshot.nsfwDetection ||
+          current.imageLoadMode !== snapshot.imageLoadMode ||
+          current.enableImageAnalysis !== snapshot.enableImageAnalysis ||
+          JSON.stringify(current.defaultUploadTags.sort()) !==
+            JSON.stringify(snapshot.defaultUploadTags.sort())
+        );
       },
     }),
     {

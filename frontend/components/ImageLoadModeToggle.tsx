@@ -28,7 +28,7 @@ export function ImageLoadModeToggle() {
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-foreground/60"
+        className="h-9 w-9 text-foreground/60"
       >
         <DefaultIcon className="h-4 w-4" />
       </Button>
@@ -46,7 +46,7 @@ export function ImageLoadModeToggle() {
           variant="ghost"
           size="icon"
           className={cn(
-            "h-8 w-8 transition-colors",
+            "h-9 w-9 transition-colors",
             imageLoadMode !== ImageLoadMode.Default
               ? "bg-amber-500/20 text-amber-500 hover:bg-amber-500/30"
               : "text-foreground/60 hover:text-foreground-muted hover:bg-secondary/50"
